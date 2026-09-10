@@ -65,16 +65,49 @@ def get_marine_data():
     return marine_data
 
 
+def get_pfz_data():
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    data_path = os.path.join(
+        base_dir,
+        "../../data/sample/pfz_data.json"
+    )
+
+    with open(data_path, "r") as file:
+        pfz_data = json.load(file)
+
+    return pfz_data
+
+
 if __name__ == "__main__":
 
-    data = get_marine_data()
+    marine_data = get_marine_data()
 
-    print("\nORCA MARINE INTELLIGENCE AGENT\n")
+    pfz_data = get_pfz_data()
 
-    for observation in data:
+    print("\nORCA MARINE INTELLIGENCE AGENT")
+
+    print("\nMARINE CONDITIONS")
+
+    for observation in marine_data:
+
         print(
             observation["parameter"],
             ":",
             observation["value"],
             observation["unit"]
+        )
+
+    print("\nPOTENTIAL FISHING ZONES")
+
+    for pfz in pfz_data:
+
+        print(
+            pfz["pfz_id"],
+            "-",
+            pfz["distance_km"],
+            "km",
+            "-",
+            pfz["status"]
         )
