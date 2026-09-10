@@ -18,11 +18,7 @@ REQUIRED_FIELDS = [
 
 
 def normalize_observation(observation: dict) -> dict:
-    """
-    Convert a raw marine observation into ORCA's
-    standardized observation format.
-    """
-
+    """Convert a marine observation to ORCA's standard format."""
     return {
         "parameter": observation["parameter"],
         "value": observation["value"],
@@ -36,10 +32,7 @@ def normalize_observation(observation: dict) -> dict:
 
 
 def validate_observation(observation: dict) -> bool:
-    """
-    Reject observations with missing required fields.
-    """
-
+    """Return False when required observation fields are missing."""
     for field in REQUIRED_FIELDS:
         if field not in observation:
             return False
@@ -51,11 +44,7 @@ def validate_observation(observation: dict) -> bool:
 
 
 def get_marine_data() -> list[dict]:
-    """
-    Load and validate marine observations from
-    the prototype sample dataset.
-    """
-
+    """Load and validate prototype marine observations."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     data_path = os.path.join(
@@ -78,10 +67,7 @@ def get_marine_data() -> list[dict]:
 
 
 def get_pfz_data() -> list[dict]:
-    """
-    Load PFZ information from the prototype dataset.
-    """
-
+    """Load prototype Potential Fishing Zone data."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     data_path = os.path.join(
@@ -97,10 +83,7 @@ def get_parameter_value(
     marine_data: list[dict],
     parameter: str,
 ):
-    """
-    Return the latest matching value for a marine parameter.
-    """
-
+    """Get the value for a requested marine parameter."""
     for observation in marine_data:
         if observation["parameter"] == parameter:
             return observation["value"]
@@ -112,10 +95,9 @@ def handle_ocean(request: AgentRequest) -> AgentResponse:
     """
     M2 Ocean Agent entry point.
 
-    Accepts an AgentRequest from M1 and returns
-    the shared ORCA AgentResponse contract.
+    Accepts M1's AgentRequest and returns M1's
+    shared AgentResponse contract.
     """
-
     try:
         marine_data = get_marine_data()
         pfz_data = get_pfz_data()
@@ -181,7 +163,6 @@ def handle_ocean(request: AgentRequest) -> AgentResponse:
         )
 
     except FileNotFoundError as exc:
-
         return AgentResponse(
             agent="ocean",
             status="unavailable",
@@ -193,7 +174,6 @@ def handle_ocean(request: AgentRequest) -> AgentResponse:
         )
 
     except (json.JSONDecodeError, KeyError, TypeError) as exc:
-
         return AgentResponse(
             agent="ocean",
             status="error",
@@ -205,7 +185,6 @@ def handle_ocean(request: AgentRequest) -> AgentResponse:
         )
 
     except Exception as exc:
-
         return AgentResponse(
             agent="ocean",
             status="error",
@@ -218,7 +197,6 @@ def handle_ocean(request: AgentRequest) -> AgentResponse:
 
 
 if __name__ == "__main__":
-
     request = AgentRequest(
         query="What are the marine conditions near Kochi?",
         location="Kochi",
