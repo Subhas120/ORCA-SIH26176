@@ -8,31 +8,40 @@ plan produced by the Planner.
 from agents.intent.intent_extractor import analyze_query
 from agents.planner.planner import create_plan
 from agents.common.agent_contract import AgentRequest, AgentResponse
+from agents.context.context_manager import ConversationContext
 from agents.orchestrator.response_aggregator import aggregate_responses
 from agents.orchestrator.parallel_executor import execute_agents_sync
 
 
-def build_execution_context(query: str) -> dict:
+def build_execution_context(
+    query: str,
+    context: ConversationContext | None = None,
+) -> dict:
     """
     Convert a natural-language query into an ORCA execution context.
 
-    Pipeline:
-        Query -> Intent + Entities -> Planner -> Execution Context
+    If a conversation context is supplied, missing entities are
+    filled using previously remembered values.
     """
 
     analysis = analyze_query(query)
+
+    entities = {
+        "location": analysis["location"],
+        "date": analysis["date"],
+        "time": analysis["time"],
+        "activity": analysis["activity"],
+    }
+
+    if context is not None:
+        entities = context.fill_missing(entities)
 
     plan = create_plan(analysis["intent"])
 
     return {
         "query": query,
         "intent": analysis["intent"],
-        "entities": {
-            "location": analysis["location"],
-            "date": analysis["date"],
-            "time": analysis["time"],
-            "activity": analysis["activity"],
-        },
+        "entities": entities,
         "agents": plan["agents"],
         "parallel": plan["parallel"],
     }
@@ -84,6 +93,7 @@ def run_query(
     query: str,
     responses: list[AgentResponse] | None = None,
     handlers: dict | None = None,
+    context: ConversationContext | None = None,
 ) -> dict:
     """
     Run the M1 coordination pipeline.
@@ -91,20 +101,25 @@ def run_query(
     Pipeline:
         Query
           -> Intent + Entities
+          -> Context
           -> Planner
           -> Agent Requests
           -> Parallel Agent Execution
           -> Response Aggregation
 
-    If handlers are supplied, specialized agents are executed
-    concurrently through the parallel executor.
+    If a ConversationContext is supplied, the current query's
+    entities are resolved against remembered conversation state.
 
-    If handlers are not supplied, optional precomputed responses
-    can be aggregated instead. This allows M1 to be developed
-    independently before specialized agents are connected.
+    Current query values always take priority over remembered values.
     """
 
-    execution_context = build_execution_context(query)
+    execution_context = build_execution_context(
+        query,
+        context=context,
+    )
+
+    if context is not None:
+        context.update(execution_context["entities"])
 
     agent_requests = create_agent_requests(execution_context)
 
