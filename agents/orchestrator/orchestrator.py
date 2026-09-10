@@ -9,6 +9,7 @@ from agents.intent.intent_extractor import analyze_query
 from agents.planner.planner import create_plan
 from agents.common.agent_contract import AgentRequest, AgentResponse
 from agents.orchestrator.response_aggregator import aggregate_responses
+from agents.orchestrator.parallel_executor import execute_agents_sync
 
 
 def build_execution_context(query: str) -> dict:
@@ -54,7 +55,9 @@ def get_agent_tasks(execution_context: dict) -> list:
     return tasks
 
 
-def create_agent_requests(execution_context: dict) -> list[AgentRequest]:
+def create_agent_requests(
+    execution_context: dict,
+) -> list[AgentRequest]:
     """
     Convert an execution context into standardized AgentRequest objects.
     """
@@ -80,6 +83,7 @@ def create_agent_requests(execution_context: dict) -> list[AgentRequest]:
 def run_query(
     query: str,
     responses: list[AgentResponse] | None = None,
+    handlers: dict | None = None,
 ) -> dict:
     """
     Run the M1 coordination pipeline.
@@ -89,17 +93,29 @@ def run_query(
           -> Intent + Entities
           -> Planner
           -> Agent Requests
+          -> Parallel Agent Execution
           -> Response Aggregation
 
-    Specialized-agent execution remains outside M1 so that
-    M2/M3/M4/M5 can provide their own implementations.
+    If handlers are supplied, specialized agents are executed
+    concurrently through the parallel executor.
+
+    If handlers are not supplied, optional precomputed responses
+    can be aggregated instead. This allows M1 to be developed
+    independently before specialized agents are connected.
     """
 
     execution_context = build_execution_context(query)
 
     agent_requests = create_agent_requests(execution_context)
 
-    if responses is None:
+    if handlers is not None:
+        responses = execute_agents_sync(
+            agent_requests=agent_requests,
+            agent_names=execution_context["agents"],
+            handlers=handlers,
+        )
+
+    elif responses is None:
         responses = []
 
     aggregated = aggregate_responses(responses)
