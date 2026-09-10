@@ -9,6 +9,10 @@ from agents.intent.intent_extractor import analyze_query
 from agents.planner.planner import create_plan
 from agents.common.agent_contract import AgentRequest, AgentResponse
 from agents.context.context_manager import ConversationContext
+from agents.validation.query_validator import (
+    validate_query,
+    get_clarification_message,
+)
 from agents.orchestrator.response_aggregator import aggregate_responses
 from agents.orchestrator.parallel_executor import execute_agents_sync
 
@@ -20,8 +24,8 @@ def build_execution_context(
     """
     Convert a natural-language query into an ORCA execution context.
 
-    If a conversation context is supplied, missing entities are
-    filled using previously remembered values.
+    Missing entities are filled from conversation context when
+    a context object is supplied.
     """
 
     analysis = analyze_query(query)
@@ -96,27 +100,47 @@ def run_query(
     context: ConversationContext | None = None,
 ) -> dict:
     """
-    Run the M1 coordination pipeline.
+    Run the complete M1 coordination pipeline.
 
     Pipeline:
         Query
           -> Intent + Entities
-          -> Context
+          -> Context Resolution
+          -> Validation
           -> Planner
           -> Agent Requests
           -> Parallel Agent Execution
           -> Response Aggregation
 
-    If a ConversationContext is supplied, the current query's
-    entities are resolved against remembered conversation state.
-
-    Current query values always take priority over remembered values.
+    Invalid queries return a clarification response and do not
+    execute specialized agents.
     """
 
     execution_context = build_execution_context(
         query,
         context=context,
     )
+
+    validation = validate_query(
+        execution_context["intent"],
+        execution_context["entities"],
+    )
+
+    if not validation["valid"]:
+        return {
+            "query": query,
+            "intent": execution_context["intent"],
+            "entities": execution_context["entities"],
+            "agents": [],
+            "parallel": False,
+            "agent_requests": [],
+            "responses": aggregate_responses([]),
+            "validation": validation,
+            "clarification": get_clarification_message(
+                execution_context["intent"],
+                validation["missing"],
+            ),
+        }
 
     if context is not None:
         context.update(execution_context["entities"])
@@ -143,6 +167,8 @@ def run_query(
         "parallel": execution_context["parallel"],
         "agent_requests": agent_requests,
         "responses": aggregated,
+        "validation": validation,
+        "clarification": None,
     }
 
 
