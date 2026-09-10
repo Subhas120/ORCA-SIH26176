@@ -1,0 +1,54 @@
+{
+  "m1_query": {
+    "intent": "SAFETY_CHECK",
+    "location": "Kochi",
+    "date": "tomorrow",
+    "time": "morning",
+    "activity": "fishing"
+  },
+  "m3_weather": {
+    "wind_speed": "number",
+    "wind_direction": "number|null",
+    "rain_probability": "number",
+    "visibility": "number",
+    "temperature": "number",
+    "wave_height": "number",
+    "wave_period": "number",
+    "storm": "boolean",
+    "cyclone": "boolean",
+    "lightning": "boolean",
+    "warning": "boolean",
+    "warning_type": "string|null",
+    "warning_severity": "string|null",
+    "timestamp": "ISO-8601 string",
+    "source": "string",
+    "confidence": "0..1 number"
+  },
+  "m3_risk": {
+    "risk_score": "0..100 number",
+    "risk_level": "LOW|MODERATE|HIGH|EXTREME|DO NOT ENTER",
+    "reasons": "string[]",
+    "evidence": "object[]",
+    "confidence": "HIGH|MEDIUM|LOW"
+  },
+  "m4_geofence": {
+    "id": "string",
+    "name": "string",
+    "type": "string",
+    "inside": "boolean",
+    "penalty": "number"
+  },
+  "m4_pfz": {
+    "id": "string",
+    "name": "string",
+    "latitude": "number",
+    "longitude": "number",
+    "distance_km": "number"
+  },
+  "m4_route": {
+    "found": "boolean",
+    "path": "[[row,col], ...]",
+    "cost": "number|null",
+    "steps": "integer"
+  }
+}

@@ -1,0 +1,69 @@
+# ORCA M3 + M4 — Windows CMD Guide
+
+## Easiest method
+
+1. Extract this ZIP.
+2. Open the extracted folder.
+3. Click the folder address bar, type `cmd`, press Enter.
+4. Run:
+
+setup.bat
+
+5. After setup finishes, run:
+
+run.bat
+
+That's it.
+
+## If you want to type the commands manually
+
+```cmd
+python --version
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pytest -q
+python demo.py
+```
+
+## What the commands do
+
+`python -m venv .venv`
+Creates an isolated Python environment.
+
+`.venv\Scripts\activate`
+Activates it.
+
+`pip install -r requirements.txt`
+Installs Shapely for GIS/geofencing and Pytest for testing.
+
+`pytest -q`
+Runs the M3 and M4 tests.
+
+`python demo.py`
+Runs the complete prototype:
+- M3 weather normalization
+- M3 deterministic risk scoring
+- M3 safety overrides
+- M4 geofencing
+- M4 nearest PFZ
+- M4 distance and bearing
+- M4 risk-aware A* routing
+
+## Important
+
+The sample weather/PFZ/restricted-zone values are DEMO data.
+They are not live INCOIS/IMD data.
+
+The project plan says prototype risk weights and bands are engineering assumptions,
+not universal scientific thresholds. They must later be calibrated/validated.
+
+## If "python" is not recognized
+
+Install Python 3.10+ and enable:
+"Add Python to PATH"
+
+Then close CMD, open a new CMD, and run:
+
+python --version
