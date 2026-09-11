@@ -1,11 +1,11 @@
+import React from 'react';
+import Dashboard from '../pages/Dashboard';
+import './App.css';
+
 function App() {
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>ORCA</h1>
-      <h2>Marine Ecosystem Reasoning with Collaborative Agents</h2>
-      <p>Frontend Connected</p>
-    </div>
+    <Dashboard />
   )
 }
 
-export default App
+export default App;
